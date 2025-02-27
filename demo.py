@@ -1,4 +1,4 @@
-# demo.py
+# pipeline demo
 import os
 import json
 from pipe.pipeline import PipelineProcessor
