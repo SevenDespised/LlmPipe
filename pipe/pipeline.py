@@ -74,7 +74,7 @@ class PipelineProcessor:
                 prompt = processor.generate_prompt(current_output)
                 response = self._call_model(prompt)
                 parsed = self._parse_response(response['content'])
-                current_output = parsed['data']
+                current_output = parsed['data'] if parsed["valid"] else parsed['original']
 
                 stage_record = {
                     "stage": stage_name,

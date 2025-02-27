@@ -85,12 +85,12 @@ def _try_repair_json(text: str) -> Optional[str]:
     
     return text if text != original_text else None
 
-def _validate_structure(data: Dict, result: Dict) -> Dict:
+def _validate_structure(data: Any, result: Dict) -> Dict:
     """验证数据结构"""
     
     # 检查根对象类型
     if not isinstance(data, dict):
-        result["errors"].append("根元素必须为JSON对象")
+        result["errors"].append("根元素非JSON对象")
         return result
     
     # 生成最终结果

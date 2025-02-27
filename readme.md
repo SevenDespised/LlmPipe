@@ -47,16 +47,31 @@ COMPONENT2 -> prompt2 -> LLM -> response2 -> POSTPROCESS -> output
       "timeout": 30
   }
 }
+```
 其中，"processing_chain"键为自定义的流水线组件相关配置，"model_config"键为open-ai大模型接口相关参数。
+
 ### processing_chain配置说明
-- name: str: 组件名称
-- module: str: importlib导入组件路径
-- init_kwargs: Dict: （可选）组件初始化参数
+- name(str): 组件名称
+- module(str): importlib导入组件路径
+- init_kwargs(Dict): （可选）组件初始化参数<br>
 根据设置的module的内容，建立组件文件夹，并在文件夹中分别编写每个组件的代码文件。
-> 例如，如果你的文件夹结构为/components/test1.py，module的内容应该设置为components.test1
+> 例如，如果你的文件夹结构为/components/test1.py，module的内容应该设置为"components.test1"
 
-流水线组件代码至少应实现**Processor类**
-Processor类至少应实现：
-    **__init__方法**：用于类的初始构造
-    **generate方法**：用于提示词生成
+### component编写说明
+组件间数据交互的方式是自定义的，这取决于你如何对llm进行提示工程。**推荐约束大模型返回json格式，流水线将自动帮你解析为字典**，否则会直接传递原始响应。<br>
+流水线组件代码至少应实现**Processor类**<br>
+Processor类至少应实现：<br>
+- **__init__方法**：用于类的初始构造<br>
+输入：自选（需要相应更改config）<br>
+输出：无
+- **generate方法**：用于提示词生成<br>
+输入：上一组件的输出或初始输入<br>
+输出：大模型提示词，用于输入open-ai-client<br>
 
+### model_config配置说明
+代码直接调用open-ai新版SDK，model_config参数说明详见[open-ai相关文档](https://www.openaidoc.com.cn/)
+
+## 依赖
+代码使用python3.12.9编写，所有库均使用pip直接安装，无需特殊指定版本。理论来说应该兼容大多数python3。<br>
+`pip install typing, importlib, openai`
+需要注意的是旧版openai的SDK可能有不同的调用方法。
