@@ -1,4 +1,4 @@
-# 提示工程算法流水线处理模块
+# LLMPipe
 
 ## 简介
 该模块实现了一个提示工程算法的流水线处理程序，通过动态加载自定义的流水线组件，依次执行各个组件的提示词生成逻辑，并调用大语言模型（LLM）进行交互，最终输出处理结果。主要目的是提供一个灵活的框架，方便用户根据自己的需求定制和扩展提示词生成流程。
@@ -72,6 +72,6 @@ Processor类至少应实现：<br>
 代码直接调用open-ai新版SDK，model_config参数说明详见[open-ai相关文档](https://www.openaidoc.com.cn/)
 
 ## 依赖
-代码使用python3.12.9编写，所有库均使用pip直接安装，无需特殊指定版本。理论来说应该兼容大多数python3。<br>
-`pip install typing, importlib, openai`
-需要注意的是旧版openai的SDK可能有不同的调用方法。
+代码使用python3.12.9编写，所有库均使用pip直接安装，无需特殊指定版本。理论来说应该兼容大多数python3。需要注意的是旧版openai的SDK可能有不同的调用方法。<br>
+命令行内运行：<br>
+`pip install typing, importlib, openai`<br>
