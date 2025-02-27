@@ -50,7 +50,7 @@ class PipelineProcessor:
         processed_chain = []
         for stage_config in chain_config:
             try:
-                module = importlib.import_module(stage_config['module'], __package__)
+                module = importlib.import_module(stage_config['module'])
                 stage_config['processor'] = module.Processor(
                     **stage_config.get('init_kwargs', {})
                 )

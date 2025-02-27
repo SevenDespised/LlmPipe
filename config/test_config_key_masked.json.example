@@ -2,12 +2,12 @@
   "processing_chain": [
       {
           "name": "test_function1",
-          "module": ".test_components.test1",
+          "module": "test_components.test1",
           "init_kwargs": {"system": "you are a pirate"}
       },
       {
           "name": "test_function2",
-          "module": ".test_components.test2"
+          "module": "test_components.test2"
       }
   ],
   "model_config": {
