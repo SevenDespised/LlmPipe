@@ -1,0 +1,6 @@
+# directory
+*__pycache__
+
+# file
+*.txt
+*.json

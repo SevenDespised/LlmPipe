@@ -1,0 +1,24 @@
+{
+  "processing_chain": [
+      {
+          "name": "test_function1",
+          "module": ".test_components.test1",
+          "init_kwargs": {"system": "you are a pirate"}
+      },
+      {
+          "name": "test_function2",
+          "module": ".test_components.test2"
+      }
+  ],
+  "model_config": {
+      "api_key": "your-api-key",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model_name": "hunyuan-lite",
+      "temperature": 0.7,
+      "max_tokens": 2000,
+      "top_p": 0.9,
+      "presence_penalty": 0.1,
+      "frequency_penalty": 0.1,
+      "timeout": 30
+  }
+}
