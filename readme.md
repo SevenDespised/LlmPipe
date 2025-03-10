@@ -74,4 +74,4 @@ Processor类至少应实现：<br>
 ## 依赖
 代码使用python3.12.9编写，所有库均使用pip直接安装，无需特殊指定版本。理论来说应该兼容大多数python3。需要注意的是旧版openai的SDK可能有不同的调用方法。<br>
 命令行内运行：<br>
-`pip install typing, importlib, openai`<br>
+`pip install typing importlib openai`<br>
