@@ -1,3 +1,4 @@
+from typing import Dict, Optional
 class Processor:
     def __init__(self):
         """
@@ -5,7 +6,7 @@ class Processor:
         """
         pass
 
-    def generate_prompt(self, input_data):
+    def generate_prompt(self, input_data, stage_output = None):
         """
         生成提示词，在输入数据前添加 "Processed: " 前缀
         """

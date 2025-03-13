@@ -23,9 +23,8 @@ class OpenAIClient:
     def generate(self, prompt: str, **kwargs) -> Dict:
         """执行模型调用，支持动态参数覆盖配置
         
-        参数说明：
-        - prompt: 输入提示词
-        - kwargs: 可覆盖配置参数（temperature/max_tokens等）
+        :param prompt: 输入提示词
+        :param kwargs: 可覆盖配置参数（temperature/max_tokens等）
         """
         try:
             params = {

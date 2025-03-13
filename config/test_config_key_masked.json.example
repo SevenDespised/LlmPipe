@@ -20,5 +20,9 @@
       "presence_penalty": 0.1,
       "frequency_penalty": 0.1,
       "timeout": 30
-  }
+  },
+  "stage_output": [
+      "test_function2"
+  ],
+  "max_history_length": 0
 }

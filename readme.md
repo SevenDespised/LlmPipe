@@ -15,7 +15,7 @@
 - 记录每个处理阶段的详细信息，包括提示词、原始响应、解析后的输出、状态和使用的令牌数。
 
 ### 执行流程示例
-（其中，小写单词代表输入或输出，大写单词代表功能模块）：
+（其中，小写单词代表输入或输出，大写单词代表功能组件）：<br>
 input -> COMPONENT1 -> prompt1 -> LLM -> response1 ->
 COMPONENT2 -> prompt2 -> LLM -> response2 -> POSTPROCESS -> output
 
@@ -27,12 +27,12 @@ COMPONENT2 -> prompt2 -> LLM -> response2 -> POSTPROCESS -> output
   "processing_chain": [
       {
           "name": "test_function1",
-          "module": "test_components.test1",
+          "module": "components.test1",
           "init_kwargs": {"system": "you are a pirate"}
       },
       {
           "name": "test_function2",
-          "module": "test_components.test2"
+          "module": "components.test2"
       }
   ],
   "model_config": {
@@ -45,7 +45,11 @@ COMPONENT2 -> prompt2 -> LLM -> response2 -> POSTPROCESS -> output
       "presence_penalty": 0.1,
       "frequency_penalty": 0.1,
       "timeout": 30
-  }
+  },
+  "stage_output": [
+      "test_function1"
+  ],
+  "max_history_length": 0
 }
 ```
 其中，"processing_chain"键为自定义的流水线组件相关配置，"model_config"键为open-ai大模型接口相关参数。
@@ -65,7 +69,9 @@ Processor类至少应实现：<br>
 输入：自选（需要相应更改config）<br>
 输出：无
 - **generate方法**：用于提示词生成<br>
-输入：上一组件的输出或初始输入<br>
+输入：input_data(**必须**)、stage_output: List<Dict>(**必须，但可以不使用**)<br>
+1.input_data为上一组件的输出或初始输入<br>
+2.stage_output所有阶段输出的列表，由pipeline定义，其中也包括原始输入。<br>
 输出：大模型提示词，用于输入open-ai-client<br>
 
 ### model_config配置说明
@@ -74,4 +80,4 @@ Processor类至少应实现：<br>
 ## 依赖
 代码使用python3.12.9编写，所有库均使用pip直接安装，无需特殊指定版本。理论来说应该兼容大多数python3。需要注意的是旧版openai的SDK可能有不同的调用方法。<br>
 命令行内运行：<br>
-`pip install typing, importlib, openai`<br>
+`pip install typing importlib openai`<br>

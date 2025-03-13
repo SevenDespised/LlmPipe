@@ -27,7 +27,8 @@ def main():
     for report in result["execution_report"]:
         for key, value in report.items():
             print(f'{key}: {value}')
-    print("最终输出:", result["final_output"]["text"])
+    print("阶段输出:", result["stage_output"])
+    print("最终输出:", result["output_data"]["text"])
 
 if __name__ == "__main__":
     main()

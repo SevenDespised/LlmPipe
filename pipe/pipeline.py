@@ -24,7 +24,7 @@ class PipelineProcessor:
         input -> COMPONENT1 -> prompt1 -> LLM -> response1 ->
         COMPONENT2 -> prompt2 -> LLM -> response2 -> POSTPROCESS -> output
         
-        config参数说明：
+        config配置说明：
         - processing_chain: 链式处理组件调用配置参数
             - name: str: 组件名称
             - module: str: importlib导入组件路径
@@ -35,7 +35,9 @@ class PipelineProcessor:
         self.model_client = self._load_model_client(config['model_config'])
         self.processing_chain = self._load_processing_chain(config['processing_chain'])
         self.error_policy = config.get('error_handling', {})
+        self.stage_output_names = config.get('stage_output', [])
         self.history = []
+        self.max_history_length = config.get('history_limit', 0)
 
     def _load_model_client(self, config: Dict) -> Any:
         """动态加载模型客户端"""
@@ -65,17 +67,24 @@ class PipelineProcessor:
         """执行动态处理流程"""
         current_output = initial_input
         execution_report = []
-
+        stage_output = {"input_data": initial_input, "history": self.history}
+        # 遍历处理链中的每个阶段
         for idx, stage in enumerate(self.processing_chain):
             stage_name = stage['name']
             processor = stage['processor']
             
             try:
-                prompt = processor.generate_prompt(current_output)
+                # 生成提示
+                prompt = processor.generate_prompt(current_output, stage_output)
+                # 调用模型
                 response = self._call_model(prompt)
+                # 解析响应
                 parsed = self._parse_response(response['content'])
+                # 更新当前输出
                 current_output = parsed['data'] if parsed["valid"] else parsed['original']
-
+                # 更新输出列表
+                stage_output[stage_name] = current_output
+                # 记录阶段信息
                 stage_record = {
                     "stage": stage_name,
                     "prompt": prompt,
@@ -87,6 +96,7 @@ class PipelineProcessor:
                 execution_report.append(stage_record)
 
             except Exception as e:
+                # 记录错误信息
                 stage_record = {
                     "stage": stage_name,
                     "status": "failed",
@@ -95,11 +105,34 @@ class PipelineProcessor:
                 }
                 execution_report.append(stage_record)
 
+        # 添加输出到stage_output
+        stage_output['output_data'] = current_output
+        # 记录历史
+        self._add_history(stage_output)
+         # 筛选需要返回的阶段输出
+        filtered_stage_output = {}
+        for name in self.stage_output_names:
+            if name in stage_output:
+                filtered_stage_output[name] = stage_output[name]
+
+        # 返回执行报告和最终输出
         return {
             "success": all(s['status'] == 'success' for s in execution_report),
             "execution_report": execution_report,
-            "final_output": current_output
+            "output_data": current_output,
+            "stage_output": filtered_stage_output
         }
+
+    # 将输出有限制的添加进历史记录
+    def _add_history(self, output: List[Dict]) -> None:
+        if self.max_history_length == 0:
+            return
+        if self.max_history_length > -1 and len(self.history) >= self.max_history_length:
+            self.history.pop(0)
+        self.history.append(output)
+    # 清空历史记录
+    def clear_history(self) -> None:
+        self.history = []
 
     def _parse_response(self, response: str) -> Dict:
         return parse_response(response = response)
