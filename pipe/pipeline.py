@@ -30,6 +30,8 @@ class PipelineProcessor:
             - module: str: importlib导入组件路径
             - init_kwargs: Dict: （可选）组件初始化参数
         - model_config: 模型api调用配置参数
+        - stage_output: （可选）指定各阶段输出名称，用于后续组件调用
+        - max_history_length: （可选）指定历史记录最大长度，超过长度则丢弃最早记录
         """
 
         self.model_client = self._load_model_client(config['model_config'])
