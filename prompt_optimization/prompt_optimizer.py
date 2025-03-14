@@ -1,8 +1,36 @@
 from prompt_optimization.utils.read_prompt import read_prompt
 from prompt_optimization.utils.example_sample import sampled_example_str
+from prompt_optimization.utils.read_template import read_template
 
 class PromptOptimizer:
+    """
+    PromptOptimizer 类用于优化和生成指令提示信息。它通过添加各种类型的提示信息来构建一个完整的提示字符串。
+
+    核心功能包括：
+    - 添加指令提示信息
+    - 添加上下文提示信息
+    - 添加输入提示信息
+    - 添加输出提示信息
+    - 添加输出格式提示信息
+    - 添加输出约束提示信息
+    - 添加聊天系统提示信息
+    - 添加聊天格式提示信息
+    - 添加聊天历史记录
+    - 添加示例数据
+
+    使用示例：
+    optimizer = PromptOptimizer("示例提示", language="en")
+    optimizer.add_instruction("指令").add_context("上下文").get_optimized_prompt()
+    """
+
     def __init__(self, prompt, language="zh"):
+        """
+        初始化 PromptOptimizer 对象。
+
+        参数：
+        - prompt (str): 初始的提示信息。
+        - language (str, optional): 提示信息的语言，默认为 "zh"。
+        """
         self.prompt = prompt
         self.language = language
         self.optimized_prompt = ""
@@ -19,12 +47,13 @@ class PromptOptimizer:
         self.optimized_prompt += context_prompt
         return self
 
-    # 添加输入提示信息
-    def add_input_text(self):
-        input_prompt = read_prompt("input", self.language, input_text="输入", prompt=self.prompt)
+    # 在输入前增加"输入："
+    def add_input_text(self, input_text="输入"):
+        input_prompt = read_prompt("input", self.language, input_text=input_text, prompt=self.prompt)
         self.optimized_prompt += input_prompt
         return self
     
+    # 在输出前增加"输出："
     def add_output_text(self, output_text="输出"):
         output_prompt = read_prompt("output", self.language, output_text=output_text)
         self.optimized_prompt += output_prompt
@@ -65,7 +94,7 @@ class PromptOptimizer:
                                          assistant_message=assistant_message)
         self.optimized_prompt += chat_format_prompt
         return self
-    
+    # 添加聊天历史记录
     def add_chat_history(self, history_message: list, your_name="用户", assistant_name="助手"):
         for message in history_message:
             if isinstance(message, list):
@@ -79,14 +108,22 @@ class PromptOptimizer:
             elif isinstance(message, str):
                 self.optimized_prompt += message + "\n"
         return self
-    
+    # 添加带历史纪录的聊天格式，统一调用上述方法。
     def add_chat_format_with_history(self, history_message = [], system_content=" ", your_name="用户", assistant_name="助手"):
         self.add_chat_system(system_content).add_chat_history(history_message, your_name, assistant_name).add_chat_format(your_name=your_name, assistant_name=assistant_name)
         return self
-    
+    # 添加采样示例
     def add_example(self, dataset: list, x_key: str, y_key: str, sample_size=3, sampling_method='random'):
         self.optimized_prompt += sampled_example_str(dataset, x_key, y_key, sample_size, sampling_method)
         return self
+    # 添加模板, to_who决定向模板中添加的是原始prompt还是优化后的prompt
+    def add_template(self, template_path: str, prompt_key: str, to_who: str = "optimized_prompt", **kwargs):
+        if prompt_key not in kwargs:
+            raise ValueError("prompt_key must be in kwargs")
+        if prompt_key != "":
+            kwargs[prompt_key] = self.optimized_prompt if to_who == "optimized_prompt" and self.optimized_prompt != "" else self.prompt
+        self.optimized_prompt = read_template(template_path, **kwargs)
+        return self 
     def get_optimized_prompt(self):
         return self.optimized_prompt
 
