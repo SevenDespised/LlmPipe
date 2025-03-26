@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 
 from .parse import parse_response
 from .client import OpenAIClient
-
+from .storage import StageExecutionData
 BASE_DIR = ".."
 CONF_DIR = "config/test_config.json"
 
@@ -30,16 +30,17 @@ class PipelineProcessor:
             - module: str: importlib导入组件路径
             - init_kwargs: Dict: （可选）组件初始化参数
         - model_config: 模型api调用配置参数
-        - stage_output: （可选）指定各阶段输出名称，用于后续组件调用
         - max_history_length: （可选）指定历史记录最大长度，超过长度则丢弃最早记录
         """
 
         self.model_client = self._load_model_client(config['model_config'])
         self.processing_chain = self._load_processing_chain(config['processing_chain'])
         self.error_policy = config.get('error_handling', {})
-        self.stage_output_names = config.get('stage_output', [])
+
         self.history = []
         self.max_history_length = config.get('history_limit', 0)
+
+        self.execution_data = StageExecutionData()
 
     def _load_model_client(self, config: Dict) -> Any:
         """动态加载模型客户端"""
@@ -69,24 +70,42 @@ class PipelineProcessor:
         """执行动态处理流程"""
         current_output = initial_input
         execution_report = []
-        stage_output = {"input_data": initial_input, "history": self.history}
+
         # 遍历处理链中的每个阶段
         for idx, stage in enumerate(self.processing_chain):
             stage_name = stage['name']
             processor = stage['processor']
             
+            # 开始记录阶段数据
+            self.execution_data.start_stage(stage_name, initial_input)
             try:
                 # 生成提示
-                prompt = processor.generate_prompt(current_output, stage_output)
+                prompt = processor.generate_prompt(current_output, self.execution_data)
+                self.execution_data.record_prompt(prompt)
+                
                 # 调用模型
                 response = self._call_model(prompt)
+                self.execution_data.record_response(response['content'])
+                
                 # 解析响应
                 parsed = self._parse_response(response['content'])
-                # 更新当前输出
                 current_output = parsed['data'] if parsed["valid"] else parsed['original']
-                # 更新输出列表
-                stage_output[stage_name] = current_output
-                # 记录阶段信息
+                self.execution_data.record_output(current_output)
+
+                # 后处理
+                if hasattr(processor, 'post_process') and processor.post_process:
+                    if hasattr(processor, 'post_process'):
+                        current_output = processor.post_process(current_output)
+                        self.execution_data.record_output(current_output)
+                
+                # 变量存储
+                variable_storage = None
+                if hasattr(processor, 'store_variable') and processor.store_variable:
+                    if hasattr(processor, 'store_variable_in_pipeline'):
+                        variable_storage = processor.store_variable_in_pipeline()
+                        self.execution_data.record_cache(variable_storage)
+                
+                # 生成执行报告
                 stage_record = {
                     "stage": stage_name,
                     "prompt": prompt,
@@ -96,8 +115,15 @@ class PipelineProcessor:
                     "tokens": response['tokens']
                 }
                 execution_report.append(stage_record)
+                
+                # 完成数据记录
+                self.execution_data.finalize_stage('success')
 
             except Exception as e:
+                # 阶段数据记录失败
+                self.execution_data.record_output(current_output)
+                self.execution_data.finalize_stage('failed')
+
                 # 记录错误信息
                 stage_record = {
                     "stage": stage_name,
@@ -107,31 +133,22 @@ class PipelineProcessor:
                 }
                 execution_report.append(stage_record)
 
-        # 添加输出到stage_output
-        stage_output['output_data'] = current_output
-        # 记录历史
-        self._add_history(stage_output)
-         # 筛选需要返回的阶段输出
-        filtered_stage_output = {}
-        for name in self.stage_output_names:
-            if name in stage_output:
-                filtered_stage_output[name] = stage_output[name]
-
+        # 将阶段存储添加至历史记录
+        self._add_history(self.execution_data.get_all_data())
         # 返回执行报告和最终输出
         return {
             "success": all(s['status'] == 'success' for s in execution_report),
             "execution_report": execution_report,
             "output_data": current_output,
-            "stage_output": filtered_stage_output
         }
 
     # 将输出有限制的添加进历史记录
-    def _add_history(self, output: List[Dict]) -> None:
+    def _add_history(self, storage: StageExecutionData) -> None:
         if self.max_history_length == 0:
             return
         if self.max_history_length > -1 and len(self.history) >= self.max_history_length:
             self.history.pop(0)
-        self.history.append(output)
+        self.history.append(storage)
     # 清空历史记录
     def clear_history(self) -> None:
         self.history = []
