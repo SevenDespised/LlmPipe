@@ -6,7 +6,7 @@ class Processor:
         """
         pass
 
-    def generate_prompt(self, input_data, stage_output = None):
+    def generate_prompt(self, input_data, data = None):
         """
         生成提示词，在输入数据前添加 "Processed: " 前缀
         """

@@ -1,4 +1,3 @@
-import datetime
 from typing import Any, Dict, List, Optional
 
 class StageExecutionData:
@@ -9,7 +8,6 @@ class StageExecutionData:
 
     def start_stage(self, stage_name: str, initial_input: Any):
         """开始记录新阶段"""
-        self.clear_data()
         self._current_stage = {
             'stage_name': stage_name,
             'initial_input': initial_input,
@@ -18,7 +16,6 @@ class StageExecutionData:
             'prompt': None,
             'raw_response': None,
             'status': 'pending',
-            'timestamp': datetime.now().isoformat(),
             'execution_time': None
         }
 
@@ -98,12 +95,6 @@ class StageExecutionData:
         """获取执行状态"""
         stage_data = self.get_stage_data(stage_name)
         return stage_data.get('status', 'unknown_status')
-
-    def get_timestamp(self, stage_name: str) -> datetime:
-        """获取时间戳（返回datetime对象）"""
-        stage_data = self.get_stage_data(stage_name)
-        ts_str = stage_data.get('timestamp')
-        return datetime.fromisoformat(ts_str) if ts_str else None
     
     def get_execution_time(self, stage_name: str) -> str:
         """获取执行时间"""

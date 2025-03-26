@@ -20,15 +20,15 @@ def main():
 
     # 执行流水线
     result = pipeline_processor.execute_pipeline(initial_input)
-
     # 打印结果
     print("执行结果:", result["success"])
     print("执行报告:")
     for report in result["execution_report"]:
         for key, value in report.items():
             print(f'{key}: {value}')
-    print("阶段输出:", result["stage_output"])
     print("最终输出:", result["output_data"]["text"])
+
+    print(pipeline_processor.execution_data.get_all_data())
 
 if __name__ == "__main__":
     main()

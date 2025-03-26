@@ -69,13 +69,12 @@ class PipelineProcessor:
 
     def execute_pipeline(self, initial_input: Dict) -> Dict:
         """执行动态处理流程"""
+        total_start_time = time.time()
         current_output = initial_input
         execution_report = []
-
-        total_start_time = time.time()
+        self.execution_data.clear_data()
         # 遍历处理链中的每个阶段
         for idx, stage in enumerate(self.processing_chain):
-            # 使用time记录开始时间
             start_time = time.time()
             stage_name = stage['name']
             processor = stage['processor']
@@ -97,14 +96,14 @@ class PipelineProcessor:
                 self.execution_data.record_output(current_output)
 
                 # 后处理
-                if hasattr(processor, 'post_process') and processor.post_process:
+                if hasattr(processor, 'post_process') and processor.if_post_process:
                     if hasattr(processor, 'post_process'):
                         current_output = processor.post_process(current_output)
                         self.execution_data.record_output(current_output)
                 
                 # 变量存储
                 variable_storage = None
-                if hasattr(processor, 'store_variable') and processor.store_variable:
+                if hasattr(processor, 'store_variable_in_pipeline') and processor.if_store_variable:
                     if hasattr(processor, 'store_variable_in_pipeline'):
                         variable_storage = processor.store_variable_in_pipeline()
                         self.execution_data.record_cache(variable_storage)
