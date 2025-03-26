@@ -1,4 +1,5 @@
 # pipeline_processor.py
+import time
 import importlib
 import json
 import os
@@ -71,8 +72,11 @@ class PipelineProcessor:
         current_output = initial_input
         execution_report = []
 
+        total_start_time = time.time()
         # 遍历处理链中的每个阶段
         for idx, stage in enumerate(self.processing_chain):
+            # 使用time记录开始时间
+            start_time = time.time()
             stage_name = stage['name']
             processor = stage['processor']
             
@@ -115,11 +119,19 @@ class PipelineProcessor:
                     "tokens": response['tokens']
                 }
                 execution_report.append(stage_record)
-                
+
+                # 记录执行时间
+                stage_time = f"{time.time() - start_time:.2f}s"
+                print(f"阶段 {stage_name} 执行时间: {stage_time}")
+                self.execution_data.record_execution_time(stage_time)
                 # 完成数据记录
                 self.execution_data.finalize_stage('success')
 
             except Exception as e:
+                # 记录执行时间
+                stage_time = f"{time.time() - start_time:.2f}s"
+                print(f"阶段 {stage_name} 执行错误，时间: {stage_time}")
+                self.execution_data.record_execution_time(stage_time)
                 # 阶段数据记录失败
                 self.execution_data.record_output(current_output)
                 self.execution_data.finalize_stage('failed')
@@ -135,11 +147,14 @@ class PipelineProcessor:
 
         # 将阶段存储添加至历史记录
         self._add_history(self.execution_data.get_all_data())
+        # 记录总执行时间
+        total_time = f"{time.time() - total_start_time:.2f}s"
         # 返回执行报告和最终输出
         return {
             "success": all(s['status'] == 'success' for s in execution_report),
             "execution_report": execution_report,
             "output_data": current_output,
+            "execution_time": total_time
         }
 
     # 将输出有限制的添加进历史记录

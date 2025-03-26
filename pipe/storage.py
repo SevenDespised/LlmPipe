@@ -18,7 +18,8 @@ class StageExecutionData:
             'prompt': None,
             'raw_response': None,
             'status': 'pending',
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'execution_time': None
         }
 
     def record_prompt(self, prompt: str):
@@ -40,6 +41,11 @@ class StageExecutionData:
         """记录cache"""
         if self._current_stage:
             self._current_stage['cache'] = cache
+
+    def record_execution_time(self, timestring: str):
+        """记录执行时间"""
+        if self._current_stage:
+            self._current_stage['execution_time'] = timestring
 
     def finalize_stage(self, status: str = 'completed'):
         """完成阶段记录"""
@@ -67,6 +73,7 @@ class StageExecutionData:
         """获取流水线原始输入"""
         stage_data = self.get_stage_by_index(0)
         return stage_data.get('initial_input')
+    
     def get_output(self, stage_name: str) -> Any:
         """获取阶段输出"""
         stage_data = self.get_stage_data(stage_name)
@@ -97,6 +104,11 @@ class StageExecutionData:
         stage_data = self.get_stage_data(stage_name)
         ts_str = stage_data.get('timestamp')
         return datetime.fromisoformat(ts_str) if ts_str else None
+    
+    def get_execution_time(self, stage_name: str) -> str:
+        """获取执行时间"""
+        stage_data = self.get_stage_data(stage_name)
+        return stage_data.get('execution_time')
 
     def get_stage_by_index(self, index: int) -> Optional[dict]:
         """通过索引获取阶段数据"""
