@@ -1,43 +1,45 @@
 {
-  "processing_chain": [
-      {
-          "name": "test_function1",
-          "module": "components.test1",
-          "init_kwargs": {"system": "you are a pirate"}
-      },
-      {
-          "name": "test_function2",
-          "module": "components.test2"
+  "processing_chain_config": [
+    {
+      "name": "test_function1",
+      "module": "components.test1",
+      "class_name": "Processor",
+      "init_kwargs": {
+        "system": "you are a pirate"
       }
+    },
+    {
+      "name": "test_function2",
+      "module": "components.test2",
+      "class_name": "Processor",
+      "client_name": "client1"
+    }
   ],
-  "clients": {
+  "clients_config": {
+    "default_client": "client1",
+    "clients_list": {
       "client1": {
-          "client_sdk": "openai",
-          "model_config": {
-            "api_key": "APIKEY",
-            "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
-            "model_name": "hunyuan-lite",
-            "temperature": 0.7,
-            "max_tokens": 2000,
-            "top_p": 0.9,
-            "presence_penalty": 0.1,
-            "frequency_penalty": 0.1,
-            "timeout": 30   
-          }
+        "client_type": "openai",
+        "model_config": {
+          "api_key": "YOUR_API",
+          "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+          "model_name": "hunyuan-lite",
+          "temperature": 0.7,
+          "max_tokens": 2000,
+          "top_p": 0.9,
+          "presence_penalty": 0.1,
+          "frequency_penalty": 0.1,
+          "timeout": 30
+        }
       },
       "client2": {
-            "client_sdk": "custom",
-            "model_config": {
-                "module": "clients.llama",
-                "model_name": "llama",
-                "temperature": 0.7,
-                "max_tokens": 2000,
-                "top_p": 0.9,
-                "presence_penalty": 0.1,
-                "frequency_penalty": 0.1,
-                "timeout": 30   
-            }
+        "client_type": "custom",
+        "model_config": {
+          "model_name": "llama",
+          "module": "clients.llama_client",
+          "class_name": "LlamaClient",
+      }
     }
   },
-    "max_history_length": 0
+  "max_history_length": 0
 }

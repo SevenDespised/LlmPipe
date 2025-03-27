@@ -137,7 +137,7 @@ class PipelineProcessor:
                 elif client_type == "custom":
                     # 动态导入自定义客户端类
                     module = importlib.import_module(client_config['module'])
-                    client_class = getattr(module, client_config['client_class'])
+                    client_class = getattr(module, client_config['class_name'])
                     clients[client_name] = client_class(**client_config['model_config'])
                 else:
                     raise ValueError(f"未知的客户端类型: {client_type}")
