@@ -2,6 +2,7 @@
 import os
 import json
 from src.pipe.pipeline import PipelineProcessor
+from pprint import pprint
 
 BASE_DIR = ""
 CONF_DIR = "config/test_config.json"
@@ -25,15 +26,9 @@ def main():
     # 设置client
     # 执行流水线
     result = pipeline_processor.execute_pipeline(initial_input)
-    # 打印结果
-    print("执行结果:", result)
-    print("执行报告:")
-    for report in result["execution_report"]:
-        for key, value in report.items():
-            print(f'{key}: {value}')
-    print("最终输出:", result["output_data"]["text"])
 
-    print(pipeline_processor.execution_data.get_all_data())
+    pprint(result, indent=2)
+    #print(pipeline_processor.execution_data.get_all_data())
 
 if __name__ == "__main__":
     main()

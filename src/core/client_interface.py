@@ -25,14 +25,17 @@ class IClientMeta(ABCMeta):
             namespace["response"] = validate_content(namespace["response"])
         return super().__new__(cls, name, bases, namespace, **kwargs)
 
-class IClient(metaclass=IClientMeta):
+class ILLMClient(metaclass=IClientMeta):
+    """
+    大模型Client接口
+    """    
     @abstractmethod
     def response(self, prompt: str, **kwargs: Any) -> Dict[str, Any]:
         """
-        发送请求并返回响应字典，字典必须包含 'content' 键
+        发送请求并返回响应字典，字典必须包含 'content' 'tokens' 'model' 键
 
         :param prompt: 请求的提示
         :param kwargs: 其他参数
         :return: 响应的字典
         """
-        pass
+        ...

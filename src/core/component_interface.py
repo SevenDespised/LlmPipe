@@ -4,7 +4,7 @@ from ..pipe.storage import StageExecutionData
 
 class IProcessor(ABC):
     """
-    Processor抽象类
+    Processor接口
     """
     
     @property

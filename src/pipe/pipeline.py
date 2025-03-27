@@ -41,6 +41,7 @@ class PipelineProcessor:
     def execute_pipeline(self, initial_input: Dict) -> Dict:
         """执行动态处理流程"""
         total_start_time = time.time()
+        total_tokens = 0
         current_output = initial_input
         execution_report = []
         self.execution_data.clear_data()
@@ -93,6 +94,8 @@ class PipelineProcessor:
                 stage_time = f"{time.time() - start_time:.2f}s"
                 print(f"阶段 {stage_name} 执行时间: {stage_time}")
                 self.execution_data.record_execution_time(stage_time)
+                # 记录token消耗
+                total_tokens += response.get('tokens', 0)
                 # 完成数据记录
                 self.execution_data.finalize_stage('success')
 
@@ -125,6 +128,7 @@ class PipelineProcessor:
             "execution_report": execution_report,
             "output_data": current_output,
             "execution_time": total_time,
+            "tokens": total_tokens
         }
     def _load_model_clients(self, clients_config: Dict) -> Dict[str, Any]:
         """动态加载所有客户端配置"""

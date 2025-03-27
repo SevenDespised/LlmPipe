@@ -2,11 +2,12 @@ import os
 import json
 from openai import OpenAI
 from typing import Dict
+from ..core.client_interface import ILLMClient
 
 BASE_DIR = ".."
 CONF_DIR = "config/test_config.json"
 
-class OpenAIClient:
+class OpenAIClient(ILLMClient):
     def __init__(self, config: Dict):
         self.client = OpenAI(
             api_key=config.get("api_key", ""),
