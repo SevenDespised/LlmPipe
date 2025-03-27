@@ -97,16 +97,14 @@ class PipelineProcessor:
 
                 # 后处理
                 if hasattr(processor, 'post_process') and processor.if_post_process:
-                    if hasattr(processor, 'post_process'):
-                        current_output = processor.post_process(current_output)
-                        self.execution_data.record_output(current_output)
+                    current_output = processor.post_process(current_output)
+                    self.execution_data.record_output(current_output)
                 
                 # 变量存储
                 variable_storage = None
                 if hasattr(processor, 'store_variable_in_pipeline') and processor.if_store_variable:
-                    if hasattr(processor, 'store_variable_in_pipeline'):
-                        variable_storage = processor.store_variable_in_pipeline()
-                        self.execution_data.record_cache(variable_storage)
+                    variable_storage = processor.store_variable_in_pipeline()
+                    self.execution_data.record_cache(variable_storage)
                 
                 # 生成执行报告
                 stage_record = {
@@ -153,7 +151,8 @@ class PipelineProcessor:
             "success": all(s['status'] == 'success' for s in execution_report),
             "execution_report": execution_report,
             "output_data": current_output,
-            "execution_time": total_time
+            "execution_time": total_time,
+            "model_name": self.model_client.model_name
         }
 
     # 将输出有限制的添加进历史记录

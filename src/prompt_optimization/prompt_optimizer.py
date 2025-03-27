@@ -1,6 +1,6 @@
-from prompt_optimization.utils.read_prompt import read_prompt
-from prompt_optimization.utils.example_sample import sampled_example_str
-from prompt_optimization.utils.read_template import read_template
+from .utils.read_prompt import read_prompt
+from .utils.example_sample import sampled_example_str
+from .utils.read_template import read_template
 
 class PromptOptimizer:
     """

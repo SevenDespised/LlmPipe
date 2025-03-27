@@ -1,7 +1,7 @@
 # pipeline demo
 import os
 import json
-from pipe.pipeline import PipelineProcessor
+from src.pipe.pipeline import PipelineProcessor
 
 BASE_DIR = ""
 CONF_DIR = "config/test_config.json"
@@ -21,7 +21,7 @@ def main():
     # 执行流水线
     result = pipeline_processor.execute_pipeline(initial_input)
     # 打印结果
-    print("执行结果:", result["success"])
+    print("执行结果:", result)
     print("执行报告:")
     for report in result["execution_report"]:
         for key, value in report.items():
