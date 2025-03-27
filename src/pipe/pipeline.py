@@ -85,7 +85,7 @@ class PipelineProcessor:
                     "raw_response": response['content'],
                     "parsed_output": parsed,
                     "status": "success",
-                    "tokens": response['tokens']
+                    "tokens": response.get('tokens', 0)
                 }
                 execution_report.append(stage_record)
 
@@ -163,7 +163,7 @@ class PipelineProcessor:
         return processing_chain
     def _call_model(self, prompt, client_name: str):
         """调用模型客户端"""
-        return self.model_clients[client_name].generate(prompt)
+        return self.model_clients[client_name].response(prompt)
     def _parse_response(self, response: str) -> Dict:
         """解析模型响应"""
         return parse_response(response = response)
