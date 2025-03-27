@@ -6,6 +6,9 @@ from src.pipe.pipeline import PipelineProcessor
 BASE_DIR = ""
 CONF_DIR = "config/test_config.json"
 
+class client:
+    def response(self, text):
+        return text
 def main():
     # 读取config.json文件
     path = os.path.join(BASE_DIR, CONF_DIR)
@@ -17,7 +20,9 @@ def main():
 
     # 准备初始输入
     initial_input = {"text": "what is your favorite food"}
-
+    {"client1": "1-50",
+     "client2": "51-100"}
+    # 设置client
     # 执行流水线
     result = pipeline_processor.execute_pipeline(initial_input)
     # 打印结果

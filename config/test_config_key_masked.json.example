@@ -10,16 +10,34 @@
           "module": "components.test2"
       }
   ],
-  "model_config": {
-      "api_key": "your-api-key",
-      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
-      "model_name": "hunyuan-lite",
-      "temperature": 0.7,
-      "max_tokens": 2000,
-      "top_p": 0.9,
-      "presence_penalty": 0.1,
-      "frequency_penalty": 0.1,
-      "timeout": 30
+  "clients": {
+      "client1": {
+          "client_sdk": "openai",
+          "model_config": {
+            "api_key": "APIKEY",
+            "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+            "model_name": "hunyuan-lite",
+            "temperature": 0.7,
+            "max_tokens": 2000,
+            "top_p": 0.9,
+            "presence_penalty": 0.1,
+            "frequency_penalty": 0.1,
+            "timeout": 30   
+          }
+      },
+      "client2": {
+            "client_sdk": "custom",
+            "model_config": {
+                "module": "clients.llama",
+                "model_name": "llama",
+                "temperature": 0.7,
+                "max_tokens": 2000,
+                "top_p": 0.9,
+                "presence_penalty": 0.1,
+                "frequency_penalty": 0.1,
+                "timeout": 30   
+            }
+    }
   },
-  "max_history_length": 0
+    "max_history_length": 0
 }

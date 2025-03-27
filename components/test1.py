@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from src.core.interface import IProcessor
+from src.core.component_interface import IProcessor
 from src.pipe.storage import StageExecutionData
 
 class Processor(IProcessor):

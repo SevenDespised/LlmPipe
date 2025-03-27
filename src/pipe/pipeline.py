@@ -1,8 +1,6 @@
 # pipeline_processor.py
 import time
 import importlib
-import json
-import os
 from typing import List, Dict, Any
 
 from .parse import parse_response
@@ -16,10 +14,6 @@ class PipelineProcessor:
         """提示工程算法流水线处理
         使用importlib库导入自定义流水线组件，并依次执行。
         流水线组件接收初始输入或上一组件经大模型后的响应输出，并生成提示词
-        流水线组件代码至少应实现Processor类
-            Processor类至少应实现：
-                __init__方法：用于类的初始构造
-                generate方法：用于提示词生成
 
         执行流程示例（其中，小写单词代表输入或输出，大写单词代表功能模块）：
         input -> COMPONENT1 -> prompt1 -> LLM -> response1 ->
@@ -34,38 +28,15 @@ class PipelineProcessor:
         - max_history_length: （可选）指定历史记录最大长度，超过长度则丢弃最早记录
         """
 
-        self.model_client = self._load_model_client(config['model_config'])
-        self.processing_chain = self._load_processing_chain(config['processing_chain'])
+        self.model_clients = self._load_model_clients(config['clients_config']['clients_list'])
+        self.default_client_name = config['clients_config']['default_client']
+        self.processing_chain = self._load_processing_chain(config['processing_chain_config'])
         self.error_policy = config.get('error_handling', {})
 
         self.history = []
-        self.max_history_length = config.get('history_limit', 0)
+        self.max_history_length = config.get('max_history_length', 0)
 
         self.execution_data = StageExecutionData()
-
-    def _load_model_client(self, config: Dict) -> Any:
-        """动态加载模型客户端"""
-        try:
-            client_class = OpenAIClient(config = config)
-            return client_class
-        except Exception as e:
-            raise RuntimeError(f"加载模型客户端失败: {str(e)}")
-
-    def _load_processing_chain(self, chain_config: List[Dict]) -> List[Dict]:
-        """动态加载处理阶段配置"""
-        processed_chain = []
-        for stage_config in chain_config:
-            try:
-                module = importlib.import_module(stage_config['module'])
-                stage_config['processor'] = module.Processor(
-                    **stage_config.get('init_kwargs', {})
-                )
-                processed_chain.append(stage_config)
-            except Exception as e:
-                raise RuntimeError(
-                    f"加载模块{stage_config['module']}失败: {str(e)}"
-                )
-        return processed_chain
 
     def execute_pipeline(self, initial_input: Dict) -> Dict:
         """执行动态处理流程"""
@@ -87,7 +58,7 @@ class PipelineProcessor:
                 self.execution_data.record_prompt(prompt)
                 
                 # 调用模型
-                response = self._call_model(prompt)
+                response = self._call_model(prompt, stage.get('client_name', self.default_client_name))
                 self.execution_data.record_response(response['content'])
                 
                 # 解析响应
@@ -109,6 +80,7 @@ class PipelineProcessor:
                 # 生成执行报告
                 stage_record = {
                     "stage": stage_name,
+                    "model": stage.get('client_name', self.default_client_name),
                     "prompt": prompt,
                     "raw_response": response['content'],
                     "parsed_output": parsed,
@@ -136,6 +108,7 @@ class PipelineProcessor:
                 # 记录错误信息
                 stage_record = {
                     "stage": stage_name,
+                    "model": stage['client_name'],
                     "status": "failed",
                     "error": str(e),
                     "tokens": response.get('tokens', 0) if 'response' in locals() else 0
@@ -152,45 +125,55 @@ class PipelineProcessor:
             "execution_report": execution_report,
             "output_data": current_output,
             "execution_time": total_time,
-            "model_name": self.model_client.model_name
         }
+    def _load_model_clients(self, clients_config: Dict) -> Dict[str, Any]:
+        """动态加载所有客户端配置"""
+        clients = {}
+        for client_name, client_config in clients_config.items():
+            try:
+                client_type = client_config.get("client_type", "openai")
+                if client_type == "openai":
+                    clients[client_name] = OpenAIClient(config=client_config['model_config'])
+                elif client_type == "custom":
+                    # 动态导入自定义客户端类
+                    module = importlib.import_module(client_config['module'])
+                    client_class = getattr(module, client_config['client_class'])
+                    clients[client_name] = client_class(**client_config['model_config'])
+                else:
+                    raise ValueError(f"未知的客户端类型: {client_type}")
+            except Exception as e:
+                raise RuntimeError(f"加载客户端 {client_name} 失败: {str(e)}")
+        return clients
 
-    # 将输出有限制的添加进历史记录
+    def _load_processing_chain(self, chain_config: List[Dict]) -> List[Dict]:
+        """动态加载处理阶段配置"""
+        processing_chain = []
+        for stage_config in chain_config:
+            try:
+                module = importlib.import_module(stage_config['module'])
+                Processor = getattr(module, stage_config['class_name'])
+                stage_config['processor'] = Processor(
+                    **stage_config.get('init_kwargs', {})
+                )
+                processing_chain.append(stage_config)
+            except Exception as e:
+                raise RuntimeError(
+                    f"加载模块{stage_config['module']}失败: {str(e)}"
+                )
+        return processing_chain
+    def _call_model(self, prompt, client_name: str):
+        """调用模型客户端"""
+        return self.model_clients[client_name].generate(prompt)
+    def _parse_response(self, response: str) -> Dict:
+        """解析模型响应"""
+        return parse_response(response = response)
     def _add_history(self, storage: StageExecutionData) -> None:
+        """将阶段执行数据添加至历史记录"""
         if self.max_history_length == 0:
             return
         if self.max_history_length > -1 and len(self.history) >= self.max_history_length:
             self.history.pop(0)
         self.history.append(storage)
-    # 清空历史记录
     def clear_history(self) -> None:
+        """清空历史记录"""
         self.history = []
-
-    def _parse_response(self, response: str) -> Dict:
-        return parse_response(response = response)
-    def _call_model(self, prompt):
-        return self.model_client.generate(prompt)
-
-
-if __name__ == "__main__":
-    # 读取config.json文件
-    path = os.path.join(BASE_DIR, CONF_DIR)
-    with open(path, 'r') as f:
-        config = json.load(f)
-
-    # 创建PipelineProcessor实例
-    pipeline_processor = PipelineProcessor(config)
-
-    # 准备初始输入
-    initial_input = {"text": "what is your favorite food"}
-
-    # 执行流水线
-    result = pipeline_processor.execute_pipeline(initial_input)
-
-    # 打印结果
-    print("执行结果:", result["success"])
-    print("执行报告:")
-    for report in result["execution_report"]:
-        for key, value in report.items():
-            print(f'{key}: {value}')
-    print("最终输出:", result["final_output"]["text"])
