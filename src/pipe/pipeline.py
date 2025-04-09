@@ -71,7 +71,10 @@ class PipelineProcessor:
                         
                         # 解析响应
                         parsed = self._parse_response(response['content'])
-                        current_output = parsed['data'] if parsed["valid"] else parsed['original']
+                        if parsed['valid']:
+                            current_output = parsed['data']
+                        else:
+                            raise ValueError(f"解析响应失败，流水线中断: {parsed['errors']}")
                         self.execution_data.record_output(current_output)
 
                         # 后处理
